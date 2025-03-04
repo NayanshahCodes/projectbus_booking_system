@@ -16,11 +16,11 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Element with ID 'book-heading' not found.");
     }
 
-    let busDetails = []; // Initialize busDetails here
+    let busDetails = []; // Initialize busDetails
 
-    searchTicketForm.addEventListener("submit", function (event) {
+    searchTicketForm.addEventListener("submit", async function (event) {
         event.preventDefault();
-        displayBus(busDetails); // Pass busDetails to displayBus
+        await displayBus(busDetails); // Pass busDetails to displayBus
     });
 });
 
@@ -30,7 +30,8 @@ async function displayBus(busDetails) {
     let fromCity = document.getElementById("formCity").value.trim();
     let toCity = document.getElementById("toCity").value.trim();
     let departureDate = document.getElementById("departue-date").value.trim();
-    console.log(fromCity, toCity, departureDate);
+    
+    console.log("From:", fromCity, "To:", toCity, "Date:", departureDate);
 
     // Input Validation
     if (!fromCity || !toCity || !departureDate) {
@@ -38,37 +39,31 @@ async function displayBus(busDetails) {
         return;
     }
 
-    console.log("Fetching bus details..");
+    console.log("Fetching bus details...");
 
     try {
-        console.log("Fetching bus details...");
-        console.log("Fetching buses...");
-        fetch(`http://localhost:5000/api/admin/viewAllBus`)
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            else {
-                console.log("Response OK");
-                return response.json();
-            }
-            return response.json();
-        })
-        .then((data) => {
-            console.log("Buses fetched:", data);
-            console.log(data.busName,data.busType,data.routeFrom,data.routeTo,data.departureTime,data.arrivalTime,data.price,data.seats)
-        })
-        console.log(data)
+        let response = await fetch(`http://localhost:5000/api/admin/viewAllBus`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        let data = await response.json(); // Await response JSON
         console.log("Buses fetched:", data);
-        console.log(data.busName,data.busType,data.routeFrom,data.routeTo,data.departureTime,data.arrivalTime,data.price,data.seats)
 
-        console.log(fromCity, toCity, departureDate);
+        // Ensure 'data' is an array
+        if (!Array.isArray(data)) {
+            console.error("Invalid data format. Expected an array.");
+            return;
+        }
 
-        console.log(fromCity, toCity, departureDate);
-        console.log("Before checkBusDetails");
+        // Log each bus's details
+        data.forEach(bus => {
+            console.log(`Bus: ${bus.busName}, Type: ${bus.busType}, From: ${bus.routeFrom}, To: ${bus.routeTo}, Departure: ${bus.departureTime}, Arrival: ${bus.arrivalTime},Date:${bus.date} Price: ${bus.fare}, Seats: ${bus.availableSeats},id=${bus._id}`);
+        });
 
+        // Check available buses
         checkBusDetails(data, fromCity, toCity, departureDate, busDetails);
-        console.log("After checkBusDetails");
 
     } catch (error) {
         console.error("Fetch error:", error);
@@ -78,21 +73,18 @@ async function displayBus(busDetails) {
 
 function checkBusDetails(data, fromCity, toCity, departureDate, busDetails) {
     console.log("Checking bus details...");
-    busDetails.length = 0; // Clear the busDetails array before adding new data.
-    data.forEach((element) => {
-        if (element.routeFrom === fromCity && element.routeTo === toCity) {
-            busDetails.push(element);
+
+    // Clear previous bus details
+    busDetails.length = 0;
+
+    data.forEach((bus) => {
+        if (bus.routeFrom === fromCity && bus.routeTo === toCity) {
+            busDetails.push(bus);
         }
     });
 
     if (busDetails.length === 0) {
-        alert(
-            "Dear Customer, there is no bus available from " +
-                fromCity +
-                " to " +
-                toCity
-        );
-        window.location.reload();
+        alert(`No bus available from ${fromCity} to ${toCity}`);
         return;
     }
 
@@ -100,75 +92,90 @@ function checkBusDetails(data, fromCity, toCity, departureDate, busDetails) {
 }
 
 function createBusDetails(busDetails, departureDate) {
-    console.log("createbusdetails");
-    console.log(busDetails);
-    console.log(departureDate);
-    console.log(fetchedBusContainer);
+    console.log("Creating bus details...");
+    let fetchedBusContainer = document.getElementById("fetched-bus-container");
 
     if (fetchedBusContainer) {
-        console.log("Element with ID 'fetched-bus-container' found.");
-        fetchedBusContainer.innerHTML = ""; // Clear the fetchedBusContainer before adding new buses.
-        busDetails.forEach((bus) => { //Use bus as the parameter.
+        fetchedBusContainer.innerHTML = ""; // Clear previous results
+
+        busDetails.forEach((bus) => {
             fetchedBusContainer.appendChild(createBusDiv(bus, departureDate));
-            console.log("Bus details created");
         });
+
+        console.log("Bus details displayed successfully.");
     } else {
-        console.log("Element with ID 'fetched-bus-container' not found.");
+        console.error("Element 'fetched-bus-container' not found.");
     }
 }
 
 function createBusDiv(bus, departureDate) {
     let busDetailsContainer = document.createElement("div");
-    busDetailsContainer.classList.add("bus-details-contaner");
+    busDetailsContainer.classList.add("bus-details-container");
 
-    // ... (rest of the createBusDiv function remains the same)
+    let busInfo = `
+        <p><strong>Bus Name:</strong> ${bus.busName}</p>
+        <p><strong>Bus Type:</strong> ${bus.busType}</p>
+        <p><strong>Route:</strong> ${bus.routeFrom} → ${bus.routeTo}</p>
+        <p><strong>Departure:</strong> ${bus.departureTime}</p>
+        <p><strong>Arrival:</strong> ${bus.arrivalTime}</p>
+        <p><strong>Price:</strong> ${bus.fare}</p>
+        <p><strong>Seats Available:</strong> ${bus.availableSeats}</p>
+    `;
+    busDetailsContainer.innerHTML = busInfo;
 
     let bookButton = document.createElement("button");
-    bookButton.id = "book-ticket";
     bookButton.innerText = "Book";
+    bookButton.addEventListener("click", () => bookTicket(bus, departureDate));
 
-    bookButton.addEventListener("click", () => {
-        bookTicket(bus, departureDate);
-    });
-
-    // ... (rest of the createBusDiv function remains the same)
-
+    busDetailsContainer.appendChild(bookButton);
     return busDetailsContainer;
 }
 
 async function bookTicket(bus, departureDate) {
-    const currUser = JSON.parse(localStorage.getItem("uuid"));
-    const currBus = bus.busId;
-    const bookApi = `http://localhost:5000/reservation/add/${currBus}?key=${currUser}`;
+    // Assuming you have the userId available in your frontend
+    // Example: userId might be stored in a variable or retrieved from local storage
+    // const userId = JSON.parse(localStorage.getItem("userId")); // Example retrieval
+
+    const currBus = bus._id;
+    console.log("inside booking");
+    // console.log(userId, currBus);
+
+    // const bookApi = `http://localhost:5000/api/admin/reservation/${currBus}`;
 
     let bodyToSend = {
+        // userId: userId, // Include userId in the body
         reservationDate: departureDate,
         source: bus.routeFrom,
         destination: bus.routeTo,
+        busId: currBus
     };
 
     try {
-        const response = await fetch(bookApi, {
+        console.log("hello")
+        const response = await fetch(`http://localhost:5000/api/admin/reservation/${currBus}`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(bodyToSend),
         });
+        console.log("hello")
+        if (!response.ok) {
+            const text = await response.text();
+            console.error("Server response was not OK:", text);
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
 
         const data = await response.json();
+        console.log(data);
 
         if (response.ok) {
-            alert(
-                "Ticket Booked Successfully!\nYour Ticket Id is " +
-                    data.reservationId
-            );
-            window.location.href = "http://127.0.0.1:5500/index.html";
+            alert(`Ticket Booked Successfully! Your Ticket Id is ${data.reservationId}`);
+            window.location.href = "index.html";
         } else {
             alert(`Error: ${data.message || "Failed to book ticket"}`);
         }
     } catch (error) {
         console.error("Fetch error:", error);
         alert("An error occurred. Please try again.");
+        console.log("Ticket booking failed.",error)
     }
 }

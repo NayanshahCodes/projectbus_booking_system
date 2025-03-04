@@ -31,13 +31,12 @@ app.get("/admin", (req, res) => {
   console.log("Trying to serve file:", filePath);
 
   res.sendFile(filePath, (err) => {
-    if (err) {
-      console.error("Error serving Admin_Home.html:", err);
-      res.status(err.status || 500).send("Error loading Admin_Home.html");
-    }
-    else {
-      console.log("Admin_Home.html served successfully");
-    }
+      if (err) {
+          console.error("Error serving Admin_Home.html:", err);
+          res.status(err.status || 500).send("Error loading Admin_Home.html");
+      } else {
+          console.log("Admin_Home.html served successfully");
+      }
   });
 });
 

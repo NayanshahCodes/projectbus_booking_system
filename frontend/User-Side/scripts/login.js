@@ -1,92 +1,32 @@
-let currUserID = JSON.parse(localStorage.getItem('uuid'));
+let account = document.getElementById("account");
+let profileImg = document.getElementById("profileImg");
+let logout = document.getElementById("logout");
+let username = JSON.parse(localStorage.getItem("username")) || null;
+let uuid = JSON.parse(localStorage.getItem("uuid")) || null;
 
-if (currUserID === undefined) {
-    currUserID = null;
-}
-
-// Function to show the custom toast notification
-function showToast(message) {
-    const toastContainer = document.getElementById("customToastContainer");
-    const toast = document.createElement("div");
-    toast.className = "custom-toast";
-    toast.textContent = message;
-
-    toastContainer.appendChild(toast);
-
-    // Auto-hide the toast after 3 seconds (adjust as needed)
-    setTimeout(function () {
-        toastContainer.removeChild(toast);
-    }, 3000);
-}
-
-function sign_in() {
-    let password = document.getElementById("password").value.trim();
-    let email = document.getElementById("email").value.trim();
-
-    // Validation
-    if (!email) {
-        showToast("Please enter your email.");
-        return false;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        showToast("Please enter a valid email address.");
-        return false;
-    }
-
-    if (!password) {
-        showToast("Please enter your password.");
-        return false;
-    }
-
-    // You can add more specific password validation rules here if needed
-
-    let signInObj = {
-        email: email,
-        password: password,
-    };
-
-    if (signInObj.email === "a@gmail.com" && signInObj.password === "123456") {
-        loginAdmin();
+function updateAccountView() {
+    if (!username || !uuid) {
+        account.innerText = "LogIn";
+        account.style.cssText = "border-radius: 5px; padding: 4px; background-color: #0E9E4D; color: white;";
+        account.href = "login.html";
+        profileImg.style.display = "none";
+        logout.style.display = "none";
     } else {
-        loginUser(signInObj);
+        account.innerText = username.split(" ")[0].toUpperCase();
+        account.style.cssText = ""; // Reset styles
+        profileImg.style.display = "block";
+        logout.style.display = "block";
+
+        // Fetch user profile when account button is clicked
+        account.addEventListener("click", function(event) {
+            event.preventDefault(); // Prevent default link behavior
+            fetchUserProfile(uuid);
+        });
     }
 }
 
-async function loginUser(obj) {
-    let url = "http://localhost:5000/api/users/login";
-    console.log(url);
-    await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(obj),
-    })
-        .then(response => response.json().then(data => ({ status: response.status, body: data })))
-        .then(result => {
-            if (result.status === 200 || result.status === 201) {
-                showToast("✅ User SignIn Successful!");
-                localStorage.setItem("username", JSON.stringify(result.body.userId));
-                localStorage.setItem("uuid", JSON.stringify(result.body.uuid))
-                window.location.href = "index.html" //redirect to home page.
-            } else if (result.status === 400) {
-                showToast("⚠️ Bad Request: " + result.body.message);
-            } else {
-                showToast("❌ Error: " + result.body.message);
-            }
-        })
-
-        .catch(error => {
-            showToast("Network Error. Please try again.");
-            console.error('Error posting data:', error);
-        });
-
-}
-
-async function loginAdmin() {
-    console.log("Inside admin");
-
-    let url = "http://localhost:5000/admin";
+async function fetchUserProfile(uuid) {
+    let url = `http://localhost:5000/api/users/profile?key=${uuid}`; // Replace with your actual API endpoint
 
     try {
         const response = await fetch(url, {
@@ -98,24 +38,59 @@ async function loginAdmin() {
 
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
-        } else {
-            console.log("Admin Login Successful!!");
         }
+
         const data = await response.json();
-        console.log("Fetched Data:", data);
+        console.log("Fetched Profile Data:", data);
 
-        if (!data.userId) {
-            showToast(data.message);
-        } else {
-            showToast("Admin Login Successful!!");
-            showToast("Welcome Admin!!");
+        // Display the profile data (you'll need to customize this part)
+        displayProfile(data);
 
-            localStorage.setItem("uuid", JSON.stringify(data.uuid));
-
-            window.location.href = "../frontend/Admin-section/Admin_Home.html";
-        }
     } catch (error) {
         showToast("Network Error. Please try again.");
-        console.error("Error fetching data:", error);
+        console.error("Error fetching profile data:", error);
+    }
+}
+
+function displayProfile(profileData) {
+    // Customize this function to display the profile data as needed
+    // Example:
+    alert(`
+        User ID: ${profileData.userId}
+        Email: ${profileData.email}
+        // Add other profile details here
+    `);
+}
+
+// Call updateAccountView on page load
+updateAccountView();
+
+function logoutUser() {
+    if (!uuid) {
+        showToast("Please Login First");
+    } else {
+        let url = `http://localhost:5000/user/logout?key=${uuid}`; // Replace with your actual logout API endpoint
+        fetch(url, {
+            method: "POST",
+        })
+            .then((response) => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error("Logout failed");
+                }
+            })
+            .then((data) => {
+                showToast("User LogOut Successful!!");
+                localStorage.removeItem("username");
+                localStorage.removeItem("uuid");
+                username = null;
+                uuid = null;
+                updateAccountView();
+            })
+            .catch((error) => {
+                console.error("Error during logout:", error);
+                showToast("Logout failed. Please try again.");
+            });
     }
 }
