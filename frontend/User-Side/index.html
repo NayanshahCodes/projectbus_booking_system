@@ -45,9 +45,14 @@
         <li><a href="about.html">About</a></li>
         <li><a href="#footerpart">Contact</a></li>
         <!-- <li id="profileImg"><img src="./Book My Bus(Frontend)/User-Side/images/images.jpeg" alt=""></li> -->
-        <li><a  href="login.html" id="account">Account</a></li>
-        <li id="logout"><div href="" style="border-radius: 5px; padding: 4px; background-color: #0E9E4D;color: white; cursor: pointer;" onclick="logoutUser()"
-          >Logout</div></li>
+        <li id="account"> <a href="#" onclick="handleAccountClick(event)">Account</a></li>
+        
+        <div id="accountDiv" style="display: none; position: absolute; top: 50px; left: 50px; border: 1px solid #ccc; padding: 20px; background-color: white;">
+         </div>
+        <li id="logout">
+          <a href="#" style="border-radius: 5px; padding: 4px; background-color: #0E9E4D; color: white; cursor: pointer; text-decoration: none;" onclick="handleLogout(event)">Logout</a>
+      </li>
+      
       </ul>
     </div>
     <div class="hamburger" id="hamburger">

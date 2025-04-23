@@ -40,7 +40,7 @@ function showData(data) {
 }
 
 function getCard(_id, BusName,BusNo, BusType, RouteFrom, RouteTo, ArrivalTime, DepartureTime, Date, AvailableSeats) {
-    let imgURL = _id % 2 === 0 ? "https://img.etimg.com/thumb/width-1200,height-900,imgsize-216810,resizemode-75,msid-94221038/news/bengaluru-news/bengalureans-can-soon-enjoy-double-decker-bus-rides-in-new-e-avatar.jpg" : "https://assets.volvo.com/is/image/VolvoInformationTechnologyAB/1860x1050-volvo-9700-CGI1?qlt=82&wid=1024&ts=1656931444230&dpr=off&fit=constrain";
+    // let imgURL = _id % 2 === 0 ? "https://img.etimg.com/thumb/width-1200,height-900,imgsize-216810,resizemode-75,msid-94221038/news/bengaluru-news/bengalureans-can-soon-enjoy-double-decker-bus-rides-in-new-e-avatar.jpg" : "https://assets.volvo.com/is/image/VolvoInformationTechnologyAB/1860x1050-volvo-9700-CGI1?qlt=82&wid=1024&ts=1656931444230&dpr=off&fit=constrain";
 
     return `
         <tr id="ID${_id}">
@@ -54,7 +54,7 @@ function getCard(_id, BusName,BusNo, BusType, RouteFrom, RouteTo, ArrivalTime, D
             <td><input type="text" id="DepartureTime" value="${DepartureTime}" disabled></td>
             <td><input type="text" id="dates" value="${Date}" disabled></td>
             <td><input type="text" id="AvailableSeats" value="${AvailableSeats}" disabled></td>
-            <td><img class="bus-photo" src="${imgURL}" alt=""></td>
+           
             <td class="edit" data-id="${_id}">Edit</td>
             <td class="delete" data-id="${_id}">Delete</td>
         </tr>

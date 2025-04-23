@@ -15,8 +15,12 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
+    "jspdf": "^3.0.1",
+    "localstorage-polyfill": "^1.0.1",
     "mongoose": "^8.10.1",
-    "nodemailer": "^6.10.0",
-    "nodemon": "^3.1.9"
+    "node-localstorage": "^3.0.5",
+    "nodemailer": "^6.10.1",
+    "nodemon": "^3.1.9",
+    "uuid": "^11.1.0"
   }
 }

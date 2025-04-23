@@ -245,7 +245,7 @@
   
   /* Responsive code for moving bus */
   .moving-bus{
-    background: url('/frontend/User-Side/images/Bus.png');
+    background: url('../images/Bus.png') no-repeat center center;
     background-repeat: no-repeat;
     right: 0;
     bottom: 85px;

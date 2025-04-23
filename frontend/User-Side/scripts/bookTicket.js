@@ -16,21 +16,20 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Element with ID 'book-heading' not found.");
     }
 
-    let busDetails = []; // Initialize busDetails
-
+    // No need to initialize busDetails here, it's local to displayBus
     searchTicketForm.addEventListener("submit", async function (event) {
         event.preventDefault();
-        await displayBus(busDetails); // Pass busDetails to displayBus
+        await displayBus(); // Fetch and display buses on submit
     });
 });
 
-async function displayBus(busDetails) {
+async function displayBus() {
     console.log("Form submitted");
 
     let fromCity = document.getElementById("formCity").value.trim();
     let toCity = document.getElementById("toCity").value.trim();
     let departureDate = document.getElementById("departue-date").value.trim();
-    
+
     console.log("From:", fromCity, "To:", toCity, "Date:", departureDate);
 
     // Input Validation
@@ -43,7 +42,7 @@ async function displayBus(busDetails) {
 
     try {
         let response = await fetch(`http://localhost:5000/api/admin/viewAllBus`);
-        
+
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
         }
@@ -63,7 +62,7 @@ async function displayBus(busDetails) {
         });
 
         // Check available buses
-        checkBusDetails(data, fromCity, toCity, departureDate, busDetails);
+        checkBusDetails(data, fromCity, toCity, departureDate); // Pass data directly
 
     } catch (error) {
         console.error("Fetch error:", error);
@@ -71,24 +70,21 @@ async function displayBus(busDetails) {
     }
 }
 
-function checkBusDetails(data, fromCity, toCity, departureDate, busDetails) {
+function checkBusDetails(data, fromCity, toCity, departureDate) {
     console.log("Checking bus details...");
 
-    // Clear previous bus details
-    busDetails.length = 0;
+    let availableBuses = data.filter(bus => bus.routeFrom === fromCity && bus.routeTo === toCity);
 
-    data.forEach((bus) => {
-        if (bus.routeFrom === fromCity && bus.routeTo === toCity) {
-            busDetails.push(bus);
-        }
-    });
-
-    if (busDetails.length === 0) {
+    if (availableBuses.length === 0) {
         alert(`No bus available from ${fromCity} to ${toCity}`);
+        let fetchedBusContainer = document.getElementById("fetched-bus-container");
+        if (fetchedBusContainer) {
+            fetchedBusContainer.innerHTML = "<p>No buses found for your selection.</p>";
+        }
         return;
     }
 
-    createBusDetails(busDetails, departureDate);
+    createBusDetails(availableBuses, departureDate);
 }
 
 function createBusDetails(busDetails, departureDate) {
@@ -119,6 +115,7 @@ function createBusDiv(bus, departureDate) {
         <p><strong>Departure:</strong> ${bus.departureTime}</p>
         <p><strong>Arrival:</strong> ${bus.arrivalTime}</p>
         <p><strong>Price:</strong> ${bus.fare}</p>
+        <p><strong>Date:</strong> ${bus.date}</p>
         <p><strong>Seats Available:</strong> ${bus.availableSeats}</p>
     `;
     busDetailsContainer.innerHTML = busInfo;
@@ -132,18 +129,17 @@ function createBusDiv(bus, departureDate) {
 }
 
 async function bookTicket(bus, departureDate) {
-    // Assuming you have the userId available in your frontend
-    // Example: userId might be stored in a variable or retrieved from local storage
-    // const userId = JSON.parse(localStorage.getItem("userId")); // Example retrieval
+    // Assuming you have the userId and authToken available in your frontend
+    const userId = JSON.parse(localStorage.getItem("userId"));
+    const authToken = localStorage.getItem("authToken"); // Retrieve the token
 
     const currBus = bus._id;
     console.log("inside booking");
-    // console.log(userId, currBus);
-
-    // const bookApi = `http://localhost:5000/api/admin/reservation/${currBus}`;
+    console.log("User ID:", userId, "Bus ID:", currBus);
+    console.log("Auth Token:", authToken); // Log the token for debugging
 
     let bodyToSend = {
-        // userId: userId, // Include userId in the body
+        userId: userId, // Include userId in the body (backend might still need it)
         reservationDate: departureDate,
         source: bus.routeFrom,
         destination: bus.routeTo,
@@ -151,21 +147,35 @@ async function bookTicket(bus, departureDate) {
     };
 
     try {
-        console.log("hello")
+        console.log("Sending booking request with token...");
         const response = await fetch(`http://localhost:5000/api/admin/reservation/${currBus}`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${authToken}` // Include the JWT token in the Authorization header
+            },
             body: JSON.stringify(bodyToSend),
         });
-        console.log("hello")
+        console.log("Booking request sent.");
+
         if (!response.ok) {
             const text = await response.text();
             console.error("Server response was not OK:", text);
-            throw new Error(`HTTP error! Status: ${response.status}`);
+            let errorMessage = `HTTP error! Status: ${response.status}`;
+            try {
+                const errorData = JSON.parse(text);
+                if (errorData && errorData.message) {
+                    errorMessage += `: ${errorData.message}`;
+                }
+            } catch (e) {
+                // If parsing JSON fails, keep the basic HTTP error message
+            }
+            alert(`Ticket booking failed. Error: ${errorMessage}`);
+            throw new Error(errorMessage);
         }
 
         const data = await response.json();
-        console.log(data);
+        console.log("Booking response:", data);
 
         if (response.ok) {
             alert(`Ticket Booked Successfully! Your Ticket Id is ${data.reservationId}`);
@@ -176,6 +186,6 @@ async function bookTicket(bus, departureDate) {
     } catch (error) {
         console.error("Fetch error:", error);
         alert("An error occurred. Please try again.");
-        console.log("Ticket booking failed.",error)
+        console.log("Ticket booking failed.", error);
     }
 }

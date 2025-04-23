@@ -1,6 +1,6 @@
 let uuid=JSON.parse(localStorage.getItem("uuid")) || "";
 console.log(uuid)
-let baseURL = `http://localhost:8080`;
+let baseURL = `http://localhost:5000`
 document.addEventListener("DOMContentLoaded", function () {
     // Add event listener to the "Logout" link
     var logoutLink = document.getElementById("logout");
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", function () {
             confirmButtonColor: "#3085d6",
           }).then(() => {
             // Redirect to the login page or any other designated page for logging out
-            let url = `${baseURL}/admin/logout?key=${uuid}`;
+            let url = `http://localhost:5000/api/admin/logout/${uuid}`
             console.log(uuid);
             fetch(url, {
                 method: 'POST'
